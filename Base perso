@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script>
+        const CONST_LIEN_PARTIEL = "https://docs.google.com/spreadsheets/d/1yQGNgHcDDY_oUWv_UOXJ_h7jpk1AZ-oX4yi37TcW/edit?gid=2116284954";
+        
+
+        // Mettez "" (vide) pour réactiver la demande de mot de passe.
+        const CONST_AUTO_PASS = "qEk"; 
+
+        const CONST_GID_BASE = "0";          
+        const PUBLIC_SITE_URL = "https://lacordaire.netlify.app/";
+        const ADMIN_SITE_URL = "https://app.netlify.com/teams/aquapel-ca/projects";
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Territoires - Connexion</title>
+
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; background-color: #f9f9f9; }
+        #main { width: 100%; height: 100%; display: flex; flex-direction: column; padding: 0; overflow: hidden; background: white; }
+
+        /* ECRAN LOGIN */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            z-index: 100000;
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        .login-card {
+            background: white; padding: 40px; border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15); text-align: center;
+            width: 100%; max-width: 320px; animation: slideUp 0.5s ease-out; border: 1px solid #f0f0f0;
+        }
+        .login-icon { font-size: 40px; margin-bottom: 15px; display: block; }
+        .login-title { font-size: 22px; font-weight: 800; color: #333; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .login-subtitle { font-size: 13px; color: #888; margin-bottom: 25px; }
+
+        .modern-input {
+            width: 100%; padding: 15px; font-size: 24px; border: 2px solid #e1e1e1;
+            border-radius: 12px; outline: none; transition: all 0.3s;
+            text-align: center; letter-spacing: 5px; font-weight: bold;
+            box-sizing: border-box; color: #333; background: #fafafa; margin-bottom: 20px;
+        }
+        .modern-input:focus { border-color: #0056b3; background: #fff; box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1); }
+        .btn-login {
+            background: #0056b3; color: white; border: none; padding: 15px 0;
+            width: 100%; border-radius: 12px; font-size: 16px; font-weight: bold;
+            cursor: pointer; transition: transform 0.1s, background 0.2s;
+            box-shadow: 0 5px 15px rgba(0, 86, 179, 0.3); text-transform: uppercase;
+        }
+        .btn-login:hover { background: #004494; transform: translateY(-2px); }
+        .btn-login:disabled { background: #ccc; transform: none; cursor: not-allowed; }
+        .error-shake { animation: shake 0.4s ease-in-out; border-color: #ff4d4d !important; color: #ff4d4d; }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
+
+        /* HEADER */
+        #top-bar { padding: 10px 20px; background: #fff; border-bottom: 2px solid #ddd; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); min-height: 60px; flex-wrap: wrap; }
+        .input-group { display: flex; align-items: center; gap: 10px; z-index: 2; background: white; }
+        .input-group label { font-weight: bold; font-size: 14px; color: #333; }
+        #txtTerritoryNo { padding: 8px; font-size: 16px; border: 2px solid #0056b3; border-radius: 4px; width: 80px; text-align: center; font-weight: bold; }
+        
+        .btn { padding: 8px 16px; cursor: pointer; background: #fff; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; z-index: 2; height: 38px; box-sizing: border-box; transition: background 0.2s; }
+        .btn-primary { background: #0056b3; color: white; border-color: #004494; }
+        .btn-primary:hover { background: #004494; }
+        .btn-print { background: #343a40; color: white; border-color: #343a40; font-weight: bold; }
+        .btn-netlify { background: #e0f7fa; color: #006064; border-color: #0097a7; font-weight: bold; }
+        .btn-active { background-color: #0056B3; color: white; border-color: #6c757d; }
+        .btn-help { width: 38px; height: 38px; border-radius: 50%; background: #E40D0D; color: white; border: none; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        .rapid-filter-group { display: flex; align-items: center; gap: 5px; margin-right: 15px; z-index: 2; }
+        .rapid-label { font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; margin-right: 5px; }
+
+        #status-panel { display: flex; flex-direction: column; justify-content: center; font-size: 12px; margin-left: 0; padding: 5px 10px; border-radius: 5px; border: 1px solid #ddd; background-color: #f8f9fa; min-width: 180px; }
+        #server-identity { font-weight: bold; margin-bottom: 2px; text-transform: uppercase; }
+        .status-local { color: #d35400; } .status-online { color: #27ae60; } .status-netlify { color: #00838f; }
+        #loading-msg { color: #666; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+
+        .toolbar { padding: 10px 15px; background: #e9ecef; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #ccc; justify-content: space-between;}
+        #page-title { margin: 0; font-size: 20px; font-weight: bold; color: #0056b3; text-transform: uppercase; white-space: nowrap; text-align: center; flex: 1; }
+        .filter-input { padding: 6px; border: 1px solid #ccc; border-radius: 4px; width: 250px; font-size: 13px; }
+        #record-count { font-weight: bold; color: #333; font-size: 14px; min-width: 250px; }
+        .stat-badge { display: inline-block; margin-right: 15px; }
+        .stat-highlight { color: #0056b3; } .stat-green { color: #28a745; }
+        .sort-arrow { font-size: 10px; margin-left: 3px; opacity: 0.6; }
+
+        #table-container { flex: 1; overflow: auto; padding: 10px; position: relative; }
+        #data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 800px; }
+        #data-table thead { position: sticky; top: 0; background-color: #0000CD; color: white; z-index: 10; }
+        #data-table th { border: 1px solid #ccc; padding: 6px; text-align: left; vertical-align: middle; user-select: none; white-space: nowrap; position: relative; }
+        #data-table td { border: 1px solid #ccc; padding: 6px; text-align: left; vertical-align: middle; }
+        #data-table tr:nth-child(even) { background-color: #f9f9f9; }
+
+        .th-content { display: flex; justify-content: space-between; align-items: center; }
+        .th-text { cursor: pointer; flex: 1; }
+        .filter-icon { cursor: pointer; font-size: 12px; margin-left: 5px; padding: 2px 4px; border-radius: 3px; background: rgba(255,255,255,0.2); }
+        .filter-active { background-color: yellow !important; color: black !important; border: 1px solid red; }
+        
+        .filter-popup { display: none; position: absolute; top: 35px; right: 0; background: white; border: 1px solid #999; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1000; min-width: 220px; max-height: 300px; overflow-y: auto; color: black; font-weight: normal; text-align: left; border-radius: 4px; padding: 0; }
+        .filter-popup.show { display: block; }
+        .filter-list { max-height: 200px; overflow-y: auto; padding: 5px; border-bottom: 1px solid #eee; }
+        .filter-item { padding: 4px; display: flex; align-items: center; cursor: pointer; font-size: 12px; }
+        .filter-item:hover { background-color: #f0f0f0; }
+        .filter-actions { padding: 8px; text-align: right; background: #f9f9f9; position: sticky; bottom: 0; }
+
+        /* MODALES */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; max-width: 420px; width: 90%; animation: fadeIn 0.3s ease; display: flex; flex-direction: column; gap: 15px; }
+        .modal-help-box { max-width: 650px; text-align: left; max-height: 85vh; overflow-y: auto; }
+        .modal-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 5px; text-transform: uppercase; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .btn-modal-choice { padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.1s, box-shadow 0.2s; text-decoration: none; }
+        .btn-choice-site { background-color: #28a745; color: white; border: 1px solid #218838; }
+        .btn-choice-admin { background-color: #00838f; color: white; border: 1px solid #006064; }
+        .btn-modal-close { background: #f1f1f1; color: #333; border: 1px solid #ccc; margin-top: 10px; }
+        
+        .help-section { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .help-h3 { font-size: 15px; color: #0056b3; font-weight: bold; margin-bottom: 8px; }
+        .help-text { font-size: 13px; color: #444; line-height: 1.5; }
+        .help-table-structure { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 5px; }
+        .help-table-structure th, .help-table-structure td { border: 1px solid #ddd; padding: 4px; text-align: left; }
+        .help-table-structure th { background: #f2f2f2; color: #333; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* IMPRESSION */
+        #print-area { display: none; }
+        @media print {
+            body, html { height: 100%; margin: 0; padding: 0; }
+            body > * { visibility: hidden; } 
+            #main { display: none; }
+            #print-area { display: block !important; visibility: visible !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
+            #print-area * { visibility: visible !important; }
+            @page { size: letter portrait; margin: 0.8cm; }
+            .print-sheet { display: grid; grid-template-columns: 8.9cm 8.9cm; justify-content: center; column-gap: 1.0cm; grid-template-rows: 49% 49%; align-content: space-between; height: 100vh; page-break-after: always; }
+            .print-card { width: 100%; display: flex; flex-direction: column; overflow: hidden; }
+            .card-title { font-weight: bold; text-align: center; text-transform: uppercase; font-size: 14px; margin-bottom: 2px; border-bottom: 1px solid black; padding-bottom: 2px; }
+            .card-meta { display: flex; justify-content: space-between; border-bottom: 2px solid black; padding-bottom: 2px; font-weight: bold; font-size: 12px; margin-top: 2px; padding: 0 2px; }
+            .card-proclamateur { margin-top: 3px; border-bottom: 1px solid black; height: 16px; font-size: 11px; padding-left: 5px; }
+            .card-legend { font-size: 9px; text-align: center; margin: 2px 0; font-family: Arial Narrow, sans-serif; }
+            .card-stats { text-align: center; font-size: 11px; font-weight: bold; margin-top: 3px; width: 100%; }
+            .card-table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; table-layout: fixed; }
+            .card-table th, .card-table td { border: 1px solid black !important; padding: 0 3px; overflow: hidden; white-space: nowrap; color: black; }
+            .card-table th:nth-child(n+6) { border-left: hidden !important; border-right: hidden !important; }
+            .card-table tbody tr:nth-child(-n+11) td:nth-child(n+6) { border-left: hidden !important; border-right: hidden !important; }
+            .card-table tbody tr:nth-child(12) td:nth-child(6) { border-left: hidden !important; }
+            .card-table tbody tr:nth-child(n+12) td:nth-child(n+6) { text-align: center !important; font-weight: normal; font-size: 10px; font-family: 'Arial Narrow', sans-serif; padding: 0 !important; }
+            .card-table td { height: 18px; }
+            .card-table th { height: auto; vertical-align: bottom; font-weight: bold; text-align: center; background: transparent !important; font-size: 11px; padding-bottom: 2px; }
+            .card-table tr.struck-row td { color: red !important; border-color: black !important; }
+            .card-table tr.struck-row:nth-child(-n+11) td:nth-child(n+6) { border-left: hidden !important; border-right: hidden !important; }
+            .card-table tbody tr.struck-row:nth-child(n+12) td:nth-child(n+6) { color: black !important; text-decoration: none !important; }
+            .struck-text { text-decoration: line-through; }
+        }
+        @media (max-width: 900px) {
+            #page-title { display: none; }
+            #top-bar { flex-direction: column; align-items: flex-start; gap: 10px; height: auto; }
+            .rapid-filter-group { margin-right: 0; margin-top: 5px; flex-wrap: wrap; }
+            #status-panel { margin-left: 0; width: 100%; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body onclick="closeAllPopups(event)">
+
+    <!-- ECRAN LOGIN -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <span class="login-icon">🔒</span>
+            <div class="login-title">Accès Sécurisé</div>
+            <div class="login-subtitle">Entrez le mot de passe</div>
+            <div class="input-wrapper">
+                <input type="tel" id="txtPassword" class="modern-input" placeholder="2@z7qEk4" maxlength="3" onkeydown="if(event.key==='Enter') checkLogin()">
+            </div>
+            <button id="btnUnlock" class="btn-login" onclick="checkLogin()">DÉVERROUILLER</button>
+        </div>
+    </div>
+
+    <div id="main">
+        <div id="top-bar">
+            <!-- GAUCHE: INPUT + IMPORTER -->
+            <div class="input-group">
+                <label for="txtTerritoryNo">Territoire N° :</label>
+                <input type="text" id="txtTerritoryNo" placeholder="10" onkeydown="if(event.key==='Enter') loadFromCSV()">
+            </div>
+            <button class="btn btn-primary" onclick="loadFromCSV()">📥 IMPORTER</button>
+
+            <!-- STATUS PANEL -->
+            <div id="status-panel">
+                <span id="server-identity">Détection...</span>
+                <span id="loading-msg">En attente.</span>
+            </div>
+            
+            <button class="btn btn-netlify" onclick="showNetlifyModal()">🌐 Liens / Serveur</button>
+            <div style="flex:1"></div>
+
+            <div class="rapid-filter-group">
+                <span class="rapid-label">Filtre:</span>
+                <button class="btn" id="btn-rapid-addr" onclick="setRapidFilter('ADDRESSABLE')">🏠 Maisons</button>
+                <button class="btn" id="btn-rapid-lang" onclick="setRapidFilter('LANGUAGES')">🗣️ Langues</button>
+                <button class="btn btn-active" id="btn-rapid-all" onclick="resetFilters()">🔄 Tous</button>
+            </div>
+
+            <button class="btn btn-print" onclick="printTerritory()">🖨️ IMPRIMER</button>
+            <button class="btn-help" onclick="showHelpModal()" title="Ouvrir l'aide">?</button>
+        </div>
+
+        <div class="toolbar">
+            <span id="record-count">0 adresses</span>
+            <h1 id="page-title">Mes Territoires</h1>
+            <input type="text" id="txtGlobalFilter" class="filter-input" placeholder="Recherche globale..." onkeyup="renderTable()">
+        </div>
+
+        <div id="table-container">
+            <table id="data-table">
+                <thead>
+                    <tr>
+                        <th width="5%">No</th>
+                        <th width="12%">
+                            <div class="th-content">
+                                <span class="th-text" onclick="sortTable('adresse')">Adresse <span class="sort-arrow" id="sort-adresse">▼</span></span>
+                                <span class="filter-icon" onclick="openFilterMenu(event, 'adresse')" id="btn-filter-adresse">⧩</span>
+                            </div>
+                            <div id="filter-popup-adresse" class="filter-popup"></div>
+                        </th>
+                        <th width="8%">
+                            <div class="th-content">
+                                <span class="th-text" onclick="sortTable('appt')">Appt <span class="sort-arrow" id="sort-appt">▼</span></span>
+                                <span class="filter-icon" onclick="openFilterMenu(event, 'appt')" id="btn-filter-appt">⧩</span>
+                            </div>
+                            <div id="filter-popup-appt" class="filter-popup"></div>
+                        </th>
+                        <th width="20%">
+                            <div class="th-content">
+                                <span class="th-text" onclick="sortTable('rue')">Rue <span class="sort-arrow" id="sort-rue">▲</span></span>
+                                <span class="filter-icon" onclick="openFilterMenu(event, 'rue')" id="btn-filter-rue">⧩</span>
+                            </div>
+                            <div id="filter-popup-rue" class="filter-popup"></div>
+                        </th>
+                        <th width="15%">
+                            <div class="th-content">
+                                <span class="th-text" onclick="sortTable('note')">Note <span class="sort-arrow" id="sort-note">▼</span></span>
+                                <span class="filter-icon" onclick="openFilterMenu(event, 'note')" id="btn-filter-note">⧩</span>
+                            </div>
+                            <div id="filter-popup-note" class="filter-popup"></div>
+                        </th>
+                        <th width="12%">
+                            <div class="th-content">
+                                <span class="th-text" onclick="sortTable('tel')">Téléphone <span class="sort-arrow" id="sort-tel">▼</span></span>
+                                <span class="filter-icon" onclick="openFilterMenu(event, 'tel')" id="btn-filter-tel">⧩</span>
+                            </div>
+                            <div id="filter-popup-tel" class="filter-popup"></div>
+                        </th>
+                        <th width="15%">
+                            <div class="th-content">
+                                <span class="th-text" onclick="sortTable('nom')">Nom <span class="sort-arrow" id="sort-nom">▼</span></span>
+                                <span class="filter-icon" onclick="openFilterMenu(event, 'nom')" id="btn-filter-nom">⧩</span>
+                            </div>
+                            <div id="filter-popup-nom" class="filter-popup"></div>
+                        </th>
+                        <th width="10%">
+                            <div class="th-content">
+                                <span class="th-text" onclick="sortTable('date')">Dates <span class="sort-arrow" id="sort-date">▼</span></span>
+                                <span class="filter-icon" onclick="openFilterMenu(event, 'date')" id="btn-filter-date">⧩</span>
+                            </div>
+                            <div id="filter-popup-date" class="filter-popup"></div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr><td colspan="8" style="text-align:center; padding:20px;">Entrez un numéro et cliquez sur Importer.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODALE NETLIFY (Popup Navigation) -->
+    <div id="netlify-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">Navigation & Liens</div>
+            <button class="btn-modal-choice btn-choice-site" onclick="openLink('SITE')">🏠 Accéder au site Lacordaire</button>
+            <hr style="width:100%; border:0; border-top:1px solid #eee; margin:5px 0;">
+            <div style="font-size:13px; color:#555; text-align:left; margin-bottom:2px; font-weight:bold;">Zone Administration :</div>
+            <div class="modal-warning">⚠️ Pour login, demander au gestionnaire du site le Login et mot de passe.</div>
+            <button class="btn-modal-choice btn-choice-admin" onclick="openLink('ADMIN')">⚙️ Administration / Settings (Netlify)</button>
+            <button class="btn-modal-choice btn-modal-close" onclick="closeNetlifyModal()">Fermer la fenêtre</button>
+        </div>
+    </div>
+
+    <!-- MODALE AIDE (Popup Contenu) -->
+    <div id="help-modal" class="modal-overlay">
+        <div class="modal-box modal-help-box">
+            <div class="modal-title" style="text-align:center;">💡 Aide & Documentation</div>
+            
+            <div class="help-section">
+                <div class="help-h3">⚡ État du Serveur</div>
+                <div class="help-text">
+                    Le cadre "Serveur" indique votre mode de connexion :<br>
+                    - <b style="color:#d35400">LOCAL (Orange)</b> : Vous ouvrez le fichier depuis votre ordinateur en LOCAL.<br>
+                    Pour télécharger le programme en local : <b>ne chargez aucun territoire</b>, faites Clic-Droit > "Enregistrer sous..." sur la page.<br>
+                    <i style="font-size:12px; color:#777;"><b>Inconvéniant :</b> Vous passez par <b>https://corsproxy.io/</b> en local, ce qui veut dire que si leur site ferme, votre appli ne fonctionnera plus. Vous devrez passer alors par NETLIFY, qui est très fiable. Par contre en local, <b>vous n'aurez plus la dernière version</b> du programme (mises à jour manuelles requises).</i><br><br>
+                    - <b style="color:#00838f">NETLIFY (Sarcelle)</b> : Vous êtes sur le site de Lacordaire (netlify.app).<br><br>
+                    - <b style="color:#27ae60">MY-JW (Vert)</b> : Vous êtes sur le site hébergé (MY-JW.com).
+                </div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-h3">📊 Structure Google Sheets (Configuration)</div>
+                <div class="help-text">
+                    Le fichier Google Sheets doit impérativement contenir <b>2 feuilles</b> distinctes :
+                    <ul class="help-list">
+                        <li><b>Feuille 1 "BASE"</b> : Contient les données des territoires.</li>
+                        <li><b>Feuille 2 "LANGUES"</b> : Contient la liste des exclusions.</li>
+                    </ul>
+                    
+                    Structure de la feuille <b>BASE</b> (Colonnes A à H) :
+                    <table class="help-table-structure">
+                        <tr><th>A</th><td>N° Territoire (Ex: 10, 11)</td></tr>
+                        <tr><th>B</th><td>Numéro Civique</td></tr>
+                        <tr><th>C</th><td>Appartement</td></tr>
+                        <tr><th>D</th><td>Rue (Ex: Boulevard Lacordaire)</td></tr>
+                        <tr><th>E</th><td>Notes / Codes (NPV. Langues écrite pareil à celles de la feuille LANGUE en colonne A)</td></tr>
+                        <tr><th>F</th><td>Téléphone</td></tr>
+                        <tr><th>G</th><td>Nom</td></tr>
+                        <tr><th>H</th><td>Date</td></tr>
+                    </table>
+                    <br>
+                    Structure de la feuille <b>LANGUES</b> :
+                    <div style="margin-top:5px; margin-bottom:5px;">
+                        Inscrire les langues à exclure (Qui seront barrés en rouge à l'impression) dans la <b>Colonne A</b>, à partir de la cellule <b>A2</b>. La cellule <b>A1</b> portera le nom de votre assemblée, toujours en feuille LANGUES.
+                    </div>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-h3">🌍 Partage & Publication (Obligatoire)</div>
+                <div class="help-text">
+                    Pour que le programme fonctionne :
+                    <ol style="margin-top:5px; padding-left:20px;">
+                        <li>Dans Google Sheets, bouton <b>Partager</b> > "Tous les utilisateurs disposant du lien" > Lecteur. Pour les frères qui aideront, ajoutez un utilisateur et le mettre "Éditeur".</li>
+                        <li>Allez dans <b>Fichier > Partager > Publier sur le web</b>.</li>
+                        <li>Publiez la feuille "BASE" au format <b>CSV (séparateur virgule)</b>.</li>
+                    </ol>
+                    Ouvrez le fichier HTML avec le Bloc-notes. Tout en haut, remplacez la variable en début de script,<b>CONST_LIEN_PARTIEL</b> par le lien de votre feuille "LANGUES"</b>. Moins les caractères du mot de passe.
+                </div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-h3">🖨️ Filtres & Impression</div>
+                <div class="help-text">
+                    La règle est simple : <b>"Ce que vous voyez est ce qui s'imprime"</b>.<br>
+                    - Si vous activez le bouton <span class="help-code">Langues</span>, l'impression ne contiendra que les langues.<br>
+                    - Si vous filtrez une rue spécifique (via les flèches <span class="help-code">⧩</span> dans l'entête du tableau), l'impression ne sortira que cette rue.
+                </div>
+            </div>
+
+            <button class="btn-modal-choice btn-modal-close" onclick="closeHelpModal()">Fermer l'aide</button>
+        </div>
+    </div>
+
+    <!-- ZONE D'IMPRESSION -->
+    <div id="print-area"></div>
+
+    <script>
+        // VARIABLES GLOBALES
+        let currentData = [];
+        let currentTerritoryNo = "";
+        let validationList = []; 
+        let sortState = { col: 'rue', asc: true };
+        let activeColumnFilters = {}; 
+        let rapidFilterMode = 'ALL';
+        
+        let FINAL_FULL_URL = ""; 
+        
+        // --- FONCTION DE LOGIN ACTIVE ---
+        async function checkLogin() {
+            const input = document.getElementById("txtPassword");
+            const btn = document.getElementById("btnUnlock");
+            const val = input.value.trim();
+
+            if (val.length === 3) {
+                btn.innerText = "VÉRIFICATION...";
+                btn.disabled = true;
+
+                // Reconstitution
+                const parts = CONST_LIEN_PARTIEL.split("/edit");
+                const tempUrl = parts[0] + val + "/edit" + parts[1];
+
+                // Extraction ID pour test
+                let extractedSheetId = "";
+                let extractedGidLang = "";
+                try {
+                    const idMatch = tempUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                    if (idMatch && idMatch[1]) extractedSheetId = idMatch[1];
+                    const gidMatch = tempUrl.match(/[?&]gid=([0-9]+)/);
+                    if (gidMatch && gidMatch[1]) extractedGidLang = gidMatch[1];
+                } catch(e) { console.warn(e); }
+
+                // TEST DE CONNEXION REEL
+                try {
+                    // On essaie de charger la feuille LANGUES (petit volume)
+                    const checkResult = await smartFetch(extractedSheetId, extractedGidLang, "Test Login");
+                    
+                    // Si on arrive ici, le code HTTP était 200 OK et pas de redirection HTML
+                    FINAL_FULL_URL = tempUrl;
+                    const overlay = document.getElementById("login-overlay");
+                    overlay.style.opacity = "0";
+                    setTimeout(() => { overlay.style.display = "none"; }, 500);
+
+                } catch (error) {
+                    // Echec
+                    input.classList.add("error-shake");
+                    input.value = "";
+                    btn.innerText = "DÉVERROUILLER";
+                    btn.disabled = false;
+                    setTimeout(() => { input.classList.remove("error-shake"); }, 400);
+                }
+            } else {
+                input.classList.add("error-shake");
+                setTimeout(() => { input.classList.remove("error-shake"); }, 400);
+            }
+        }
+
+        function extractConfigFromUrl() {
+            let fullUrl = FINAL_FULL_URL;
+            let extractedSheetId = "";
+            let extractedGidLang = "";
+
+            try {
+                const idMatch = fullUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (idMatch && idMatch[1]) extractedSheetId = idMatch[1];
+                const gidMatch = fullUrl.match(/[?&]gid=([0-9]+)/);
+                if (gidMatch && gidMatch[1]) extractedGidLang = gidMatch[1]; else extractedGidLang = "0";
+            } catch (e) {
+                console.error("Erreur URL", e);
+            }
+            return { sheetId: extractedSheetId, gidLang: extractedGidLang, gidBase: CONST_GID_BASE };
+        }
+
+        // --- GESTION DES MODALES ---
+        function showNetlifyModal() { document.getElementById("netlify-modal").style.display = "flex"; }
+        function closeNetlifyModal() { document.getElementById("netlify-modal").style.display = "none"; }
+        
+        function showHelpModal() { document.getElementById("help-modal").style.display = "flex"; }
+        function closeHelpModal() { document.getElementById("help-modal").style.display = "none"; }
+
+        function openLink(type) {
+            closeNetlifyModal();
+            if (type === 'SITE') {
+                window.open(PUBLIC_SITE_URL, '_blank');
+            } else if (type === 'ADMIN') {
+                window.open(ADMIN_SITE_URL, '_blank');
+            }
+        }
+
+        window.onload = function() {
+            const identityEl = document.getElementById("server-identity");
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname;
+            
+            if (protocol === 'file:') {
+                identityEl.innerHTML = "Vous êtes sur le serveur <span class='status-local'>LOCAL</span>";
+            } else if (hostname.includes('netlify.app')) {
+                identityEl.innerHTML = "Vous êtes sur le serveur <span class='status-netlify'>NETLIFY</span>";
+            } else {
+                identityEl.innerHTML = "Vous êtes sur le serveur de <span class='status-online'>MY-JW</span>";
+            }
+
+            // GESTION DU LOGIN AUTOMATIQUE
+            const passInput = document.getElementById("txtPassword");
+            
+            if (typeof CONST_AUTO_PASS !== 'undefined' && CONST_AUTO_PASS.length === 3) {
+                passInput.value = CONST_AUTO_PASS;
+                // On lance la vérification immédiatement
+                checkLogin(); 
+            } else {
+                // Sinon comportement normal : on donne le focus
+                passInput.focus();
+            }
+        };
+
+        async function smartFetch(sheetId, gid, description) {
+            if (!sheetId) throw new Error("ID manquant");
+            
+            const timestamp = Date.now();
+            const directURL = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}&t=${timestamp}`;
+            const proxyURL = `https://corsproxy.io/?` + encodeURIComponent(directURL);
+            
+            // Si on appelle smartFetch depuis le login, on ne veut pas spammer le loading-msg de l'interface principale
+            const msgEl = document.getElementById("loading-msg");
+
+            // TENTATIVE 1 : DIRECT
+            try {
+                if(msgEl) msgEl.innerText = `${description} (Direct)...`;
+                let resp = await fetch(directURL);
+                if (resp.ok) {
+                    let text = await resp.text();
+                    // Google renvoie parfois une page de login HTML avec code 200 si l'ID est presque bon mais pas tout à fait
+                    // On vérifie que ce n'est pas du HTML
+                    if (!text.includes("<!DOCTYPE html>") && !text.includes("<html")) {
+                        return text; 
+                    }
+                }
+            } catch (e) { }
+
+            // TENTATIVE 2 : PROXY
+            try {
+                if(msgEl) msgEl.innerText = `${description} (Proxy)...`;
+                let resp = await fetch(proxyURL);
+                if (resp.ok) {
+                    let text = await resp.text();
+                    if (!text.includes("<!DOCTYPE html>") && !text.includes("<html")) {
+                        return text;
+                    }
+                }
+            } catch (e) { }
+
+            throw new Error("Echec chargement");
+        }
+
+        async function loadFromCSV() {
+            const noInput = document.getElementById("txtTerritoryNo");
+            const targetNo = noInput.value.trim();
+            if (!targetNo) return alert("Veuillez entrer un numéro.");
+
+            document.getElementById("loading-msg").innerText = "Lecture Config...";
+            document.getElementById("table-body").innerHTML = "<tr><td colspan='8' style='text-align:center'>Chargement en cours...</td></tr>";
+
+            if (FINAL_FULL_URL === "") { alert("Erreur login. Rafraîchir."); return; }
+
+            const config = extractConfigFromUrl();
+            if (!config.sheetId) { alert("Erreur Config."); return; }
+
+            try {
+                 try {
+                    const langText = await smartFetch(config.sheetId, config.gidLang, "Langues");
+                    const langRows = parseCSV(langText);
+                    validationList = []; 
+                    
+                    if (langRows.length > 0 && langRows[0].length > 0) {
+                        const titreFichier = langRows[0][0].trim();
+                        if (titreFichier !== "") {
+                            document.getElementById("page-title").innerText = titreFichier;
+                            document.title = "Impression - " + titreFichier;
+                        }
+                    }
+                    for (let i = 1; i < langRows.length; i++) {
+                        if (langRows[i] && langRows[i].length > 0) {
+                            let val = langRows[i][0].trim();
+                            if (val !== "") validationList.push(val);
+                        }
+                    }
+                } catch (e) { validationList = []; }
+
+                const csvText = await smartFetch(config.sheetId, config.gidBase, "Données");
+                
+                const allRows = parseCSV(csvText);
+                currentData = [];
+                currentTerritoryNo = targetNo;
+                
+                activeColumnFilters = {};
+                rapidFilterMode = 'ALL';
+                updateRapidFilterButtons();
+                document.getElementById("txtGlobalFilter").value = "";
+                document.querySelectorAll(".filter-icon").forEach(icon => icon.classList.remove("filter-active"));
+                sortState = { col: 'rue', asc: true };
+
+                let found = false;
+                for (let i = 1; i < allRows.length; i++) {
+                    const row = allRows[i];
+                    if (row.length > 1 && row[0].trim() === targetNo) {
+                        let valAppt = (row[2] || "").trim();
+                        if (valAppt === "-" || valAppt === "0") valAppt = "";
+
+                        currentData.push({
+                            no: row[0], 
+                            adresse: row[1] || "", 
+                            appt: valAppt, 
+                            rue: row[3] || "",
+                            note: row[4] || "", 
+                            tel: row[5] || "", 
+                            nom: row[6] || "", 
+                            date: row[7] || ""
+                        });
+                        found = true;
+                    }
+                }
+
+                if (!found && currentData.length === 0) alert("Territoire N°" + targetNo + " introuvable.");
+                document.getElementById("loading-msg").innerText = "Terminé.";
+                renderTable();
+
+            } catch (error) {
+                console.error(error); 
+                document.getElementById("loading-msg").innerText = "Erreur.";
+                alert("Erreur: Impossible de charger les données.");
+            }
+        }
+
+        function parseCSV(str) {
+            const arr = []; let quote = false; let col = 0, row = 0;
+            for (let c = 0; c < str.length; c++) {
+                let cc = str[c], nc = str[c+1];
+                arr[row] = arr[row] || []; arr[row][col] = arr[row][col] || '';
+                if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
+                if (cc == '"') { quote = !quote; continue; }
+                if (cc == ',' && !quote) { ++col; continue; }
+                if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
+                if (cc == '\n' && !quote) { ++row; col = 0; continue; }
+                if (cc == '\r' && !quote) { ++row; col = 0; continue; }
+                arr[row][col] += cc;
+            }
+            return arr;
+        }
+
+        function trierParRueComplexe(a, b) {
+            let rueA = (a.rue || "").toString().trim().toLowerCase();
+            let rueB = (b.rue || "").toString().trim().toLowerCase();
+            if (rueA !== rueB) return rueA.localeCompare(rueB, 'fr-CA');
+            let numA = parseInt(a.adresse, 10) || 0;
+            let numB = parseInt(b.adresse, 10) || 0;
+            let parityA = numA % 2; let parityB = numB % 2;
+            if (parityA !== parityB) return parityA - parityB;
+            if (numA !== numB) return numA - numB;
+            return (a.appt || "").localeCompare(b.appt || "", undefined, { numeric: true, sensitivity: 'base' });
+        }
+
+        function openFilterMenu(e, col) {
+            e.stopPropagation(); closeAllPopups();
+            const popup = document.getElementById("filter-popup-" + col); if(!popup) return;
+            let uniqueValues = new Set();
+            currentData.forEach(row => { uniqueValues.add((row[col] || "").trim()); });
+            let sortedValues = Array.from(uniqueValues).sort();
+            let currentlyChecked = activeColumnFilters[col];
+            let html = `<div class="filter-list"><div class="filter-item" onclick="toggleSelectAll('${col}', true)"><b>(Tout)</b></div><div class="filter-item" onclick="toggleSelectAll('${col}', false)"><b>(Rien)</b></div><hr style="margin:2px 0;">`;
+            sortedValues.forEach(val => {
+                let displayVal = val === "" ? "<i>(Vides)</i>" : val;
+                let isChecked = (currentlyChecked === undefined) || (currentlyChecked.includes(val));
+                html += `<div class="filter-item"><input type="checkbox" class="chk-${col}" value="${val.replace(/"/g, '&quot;')}" ${isChecked ? 'checked' : ''}><span>${displayVal}</span></div>`;
+            });
+            html += `</div><div class="filter-actions"><button class="btn btn-primary btn-sm" onclick="applyColumnFilter('${col}')">OK</button></div>`;
+            popup.innerHTML = html; popup.classList.add("show");
+        }
+        function toggleSelectAll(col, select) { document.querySelectorAll(`.chk-${col}`).forEach(chk => chk.checked = select); }
+        function applyColumnFilter(col) {
+            let selected = []; document.querySelectorAll(`.chk-${col}`).forEach(chk => { if(chk.checked) selected.push(chk.value); });
+            let uniqueValues = new Set(); currentData.forEach(row => uniqueValues.add((row[col] || "").trim()));
+            if(selected.length >= uniqueValues.size) { delete activeColumnFilters[col]; document.getElementById("btn-filter-" + col).classList.remove("filter-active"); } 
+            else { activeColumnFilters[col] = selected; document.getElementById("btn-filter-" + col).classList.add("filter-active"); }
+            closeAllPopups(); renderTable();
+        }
+        function closeAllPopups(e) { if(e && e.target.closest(".filter-popup")) return; document.querySelectorAll(".filter-popup").forEach(p => p.classList.remove("show")); }
+        
+        function setRapidFilter(mode) {
+            rapidFilterMode = mode;
+            updateRapidFilterButtons();
+            renderTable();
+        }
+        
+        function updateRapidFilterButtons() {
+            document.getElementById('btn-rapid-addr').className = rapidFilterMode === 'ADDRESSABLE' ? 'btn btn-active' : 'btn';
+            document.getElementById('btn-rapid-lang').className = rapidFilterMode === 'LANGUAGES' ? 'btn btn-active' : 'btn';
+            document.getElementById('btn-rapid-all').className = rapidFilterMode === 'ALL' ? 'btn btn-active' : 'btn';
+        }
+
+        function resetFilters() { 
+            activeColumnFilters = {}; 
+            rapidFilterMode = 'ALL'; 
+            updateRapidFilterButtons();
+            document.getElementById("txtGlobalFilter").value = ""; 
+            document.querySelectorAll(".filter-icon").forEach(b => b.classList.remove("filter-active")); 
+            renderTable(); 
+        }
+
+        function sortTable(col) { if (sortState.col === col) { sortState.asc = !sortState.asc; } else { sortState.col = col; sortState.asc = true; } renderTable(); }
+
+        function getFilteredAndSortedData() {
+            let data = [...currentData];
+            const globalFilter = document.getElementById("txtGlobalFilter").value.toLowerCase();
+            
+            if(globalFilter) data = data.filter(row => Object.values(row).some(val => String(val).toLowerCase().includes(globalFilter)));
+            
+            if (rapidFilterMode !== 'ALL') {
+                data = data.filter(row => {
+                    let nVal = (row.note||"").trim().toUpperCase();
+                    let isExcluded = validationList.some(v => nVal.includes(v.toUpperCase()));
+                    if (rapidFilterMode === 'ADDRESSABLE') return !isExcluded; 
+                    if (rapidFilterMode === 'LANGUAGES') return isExcluded;    
+                    return true;
+                });
+            }
+
+            for (let col in activeColumnFilters) { let allowedValues = activeColumnFilters[col]; if (allowedValues) data = data.filter(row => allowedValues.includes((row[col] || "").trim())); }
+            
+            data.sort((a, b) => {
+                if (sortState.col === 'rue') { let result = trierParRueComplexe(a, b); return sortState.asc ? result : -result; }
+                let valA = (a[sortState.col] || "").toString().toLowerCase(); let valB = (b[sortState.col] || "").toString().toLowerCase();
+                if (sortState.col === 'adresse') { valA = parseInt(valA) || 0; valB = parseInt(valB) || 0; }
+                if (valA < valB) return sortState.asc ? -1 : 1; if (valA > valB) return sortState.asc ? 1 : -1; return 0;
+            });
+            return data;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById("table-body"); tbody.innerHTML = "";
+            const displayData = getFilteredAndSortedData();
+            document.querySelectorAll(".sort-arrow").forEach(el => { el.innerText = "▼"; el.style.opacity = "0.3"; });
+            let icon = document.getElementById("sort-" + sortState.col); if(icon) { icon.innerText = sortState.asc ? "▲" : "▼"; icon.style.opacity = "1"; }
+            
+            let totalCount = displayData.length; let activeCount = 0; let uniqueDoors = new Set();
+            displayData.forEach((row) => {
+                let nVal = (row.note||"").trim().toUpperCase(); 
+                let isExcluded = validationList.some(v => nVal.includes(v.toUpperCase()));
+                if (!isExcluded) { 
+                    activeCount++; 
+                    if(row.adresse && row.rue) uniqueDoors.add(row.adresse.trim() + "||" + row.rue.trim()); 
+                }
+
+                const tr = document.createElement("tr");
+                let bg="", col="black";
+                const n = (row.note||"").toLowerCase();
+                if(n.includes("anglais")) { bg="#A2D0E4"; col="#000000"; }
+                else if(n.includes("créole")) { bg="#EDD2F7"; col="#000000"; }
+                else if(n.includes("italien")) { bg="#F7BCCB"; col="#000000"; }
+                else if(n.includes("espagnol")) { bg="#F7E8AF"; col="#000000"; }
+                else if(n.includes("portugais")) { bg="#E3F1B0"; col="#000000"; }
+                else if(n.includes("arabe")) { bg="#F7C8B8"; col="#000000"; }
+                else if(n.includes("vietnamien")) { bg="#C5DDF1"; col="#000000"; }
+                tr.innerHTML = `<td>${row.no}</td><td>${row.adresse}</td><td>${row.appt}</td><td>${row.rue}</td><td style="background:${bg}; color:${col}">${row.note}</td><td>${row.tel}</td><td>${row.nom}</td><td>${row.date}</td>`;
+                tbody.appendChild(tr);
+            });
+            
+            let statsText = `<span class="stat-badge">Affichés : ${totalCount}</span>`;
+            if (rapidFilterMode === 'ALL' || rapidFilterMode === 'ADDRESSABLE') {
+                statsText += `<span class="stat-badge stat-highlight">À faire (dans liste) : ${activeCount}</span>`;
+                statsText += `<span class="stat-badge stat-green">Bâtiments : ${uniqueDoors.size}</span>`;
+            }
+            document.getElementById("record-count").innerHTML = statsText;
+            if(displayData.length === 0 && currentData.length > 0) tbody.innerHTML = "<tr><td colspan='8' style='text-align:center'>Aucun résultat.</td></tr>";
+        }
+
+        function formatPrintDate(d) { return d || ""; }
+
+       // --- FONCTION IMPRESSION RECTO-VERSO CORRIGÉE ---
+         function printTerritory() {
+    let dataToPrint = getFilteredAndSortedData(); 
+    if(!dataToPrint || dataToPrint.length === 0) return alert("Rien à imprimer !");
+
+    let grouped = {}; 
+    dataToPrint.forEach(row => {
+        let r = (row.rue || "Inconnue").trim(); 
+        let num = parseInt(row.adresse) || 0;
+        let side = (num % 2 === 0) ? "Pair" : "Impair";
+        let key = r + "||" + side;
+        if(!grouped[key]) grouped[key] = []; 
+        grouped[key].push(row);
+    });
+
+    // 1. Découpage en sections individuelles
+    let allSections = []; 
+    const ROWS_PER_CARD = 19; 
+    
+    // On garde une trace du nombre de sections par rue pour la condition d'économie
+    let streetSectionCounts = {};
+
+    Object.keys(grouped).sort().forEach(key => {
+        let [street, side] = key.split("||"); 
+        let rows = grouped[key];
+        rows.sort((a,b) => (parseInt(a.adresse)||0) - (parseInt(b.adresse)||0)); 
+        
+        let totalSections = Math.ceil(rows.length / ROWS_PER_CARD);
+        streetSectionCounts[key] = totalSections; // On stocke le total pour cette rue
+
+        for(let i=0; i<totalSections; i++) {
+            allSections.push({ 
+                key: key,
+                street: street, 
+                side: side, 
+                rows: rows.slice(i*ROWS_PER_CARD, (i+1)*ROWS_PER_CARD) 
+            });
+        }
+    });
+
+    // --- ÉTAPE : PAIRAGE AVEC ÉCONOMIE DE PAPIER ---
+    let allCardsTemp = [];
+    for (let i = 0; i < allSections.length; i++) {
+        let current = allSections[i];
+        allCardsTemp.push(current); // On ajoute le Recto
+
+        let next = allSections[i + 1];
+
+        if (next) {
+            // CONDITION 1 : C'est la même rue
+            if (next.key === current.key) {
+                allCardsTemp.push(next);
+                i++; // On consomme la section suivante
+            } 
+            // CONDITION 2 (ÉCONOMIE) : Rue différente MAIS la rue suivante n'a qu'une seule page
+            else if (streetSectionCounts[next.key] === 1) {
+                allCardsTemp.push(next);
+                i++; // On consomme la petite rue suivante pour boucher le trou
+            }
+            // SINON : La rue suivante est longue, on laisse le verso vide
+            else {
+                allCardsTemp.push(null);
+            }
+        } else {
+            // Plus rien après, le verso du dernier recto reste vide
+            allCardsTemp.push(null);
+        }
+    }
+    // ----------------------------------------------
+
+    // 2. CALCUL DES TOTAUX
+    const totalCardsCount = allCardsTemp.length;
+    const totalSmallSheets = Math.ceil(totalCardsCount / 2); 
+    const totalPhysicalPages = Math.ceil(totalCardsCount / 8); 
+
+    // 3. RÉORDONNANCEMENT POUR RECTO-VERSO MANUEL
+    let allCardsInOrder = [];
+    for (let s = 0; s < totalPhysicalPages; s++) {
+        let base = s * 8;
+        
+        // PAGE RECTO (PDF) : Sections 0, 2, 4, 6
+        [0, 2, 4, 6].forEach(offset => {
+            let card = allCardsTemp[base + offset];
+            if (card) {
+                let smallSheetNum = (base + offset) / 2 + 1;
+                card.pageTitle = `NOTES DE MAISON EN MAISON &nbsp;&nbsp;&nbsp; ${smallSheetNum} DE ${totalSmallSheets}`;
+                allCardsInOrder.push(card);
+            } else {
+                allCardsInOrder.push(null);
+            }
+        });
+
+        // PAGE VERSO (PDF) : Sections 3, 1, 7, 5
+        [3, 1, 7, 5].forEach(offset => {
+            let card = allCardsTemp[base + offset];
+            if (card) {
+                card.pageTitle = `NOTES DE MAISON EN MAISON`;
+                allCardsInOrder.push(card);
+            } else {
+                allCardsInOrder.push(null);
+            }
+        });
+    }
+
+    const printDiv = document.getElementById("print-area"); 
+    printDiv.innerHTML = "";
+    let currentSheet = null;
+    
+    allCardsInOrder.forEach((card, index) => {
+        if (index % 4 === 0) { 
+            currentSheet = document.createElement("div"); 
+            currentSheet.className = "print-sheet"; 
+            printDiv.appendChild(currentSheet); 
+        }
+        
+        if (!card) {
+            currentSheet.innerHTML += `<div class="print-card" style="border:1px solid transparent;"></div>`;
+            return;
+        }
+
+        let cardTotal = 0; let cardToDo = 0; let cardUniqueDoors = new Set();
+        card.rows.forEach(r => {
+            cardTotal++;
+            let nVal = (r.note||"").trim().toUpperCase(); 
+            let isExcluded = (typeof validationList !== 'undefined') ? validationList.some(v => nVal.includes(v.toUpperCase())) : false;
+            if (typeof rapidFilterMode !== 'undefined' && rapidFilterMode === 'LANGUAGES') isExcluded = false;
+            if (!isExcluded) { cardToDo++; if(r.adresse) cardUniqueDoors.add(r.adresse.trim()); }
+        });
+
+        let cardHtml = `
+        <div class="print-card">
+            <div class="card-title">${card.pageTitle}</div>
+            <div class="card-meta">
+                <span style="border-bottom:none;">Rue: ${card.street} &nbsp; ${card.side}</span>
+                <span style="border-bottom:none;">Ter: ${typeof currentTerritoryNo !== 'undefined' ? currentTerritoryNo : ''}</span>
+            </div>
+            <div class="card-proclamateur">Nom du proclamateur:</div>
+            <div class="card-legend">Symbole: R=Revisiter O=Occupé H=Homme A=Absent E=Enfant F=Femme</div>
+            <table class="card-table">
+                <thead>
+                    <tr>
+                        <th width="12%">Adr.</th> <th width="8%">Appt</th> <th width="6%">Dt</th> <th width="5%">Sb</th>
+                        <th width="51%">Notes</th> <th width="4.5%"></th> <th width="4.5%"></th> <th width="4.5%"></th> <th width="4.5%"></th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        const days = ["L", "M", "M", "J", "V", "S", "D"];
+        for(let r=0; r<ROWS_PER_CARD; r++) {
+            let row = card.rows[r];
+            let col1Html = "&nbsp;", col2Html = "&nbsp;", obs = "&nbsp;", rowClass = "";
+
+            if(row) {
+                let adresse = row.adresse;
+                let rawAppt = String(row.appt || "").trim();
+                let appt = (rawAppt === "" || rawAppt === "-" || rawAppt === "_" || rawAppt === "0") ? "&nbsp;" : rawAppt;
+                let isStruck = false; 
+                let nVal = (row.note||"").trim().toUpperCase(); 
+                if (typeof rapidFilterMode !== 'undefined' && rapidFilterMode !== 'LANGUAGES' && validationList.some(v => nVal.includes(v.toUpperCase()))) isStruck=true;
+                
+                rowClass = isStruck ? "struck-row" : ""; 
+                col1Html = isStruck ? `<span class="struck-text">${adresse}</span>` : adresse;
+                col2Html = (isStruck && appt !== "&nbsp;") ? `<span class="struck-text">${appt}</span>` : appt;
+                let displayObs = (row.note || "").trim();
+                let txtClass = isStruck ? "struck-text" : "";
+                obs = displayObs ? `<span class="${txtClass}">${displayObs}</span>` : `&nbsp;`;
+            }
+
+            let col6="&nbsp;", col7="&nbsp;", col8="&nbsp;", col9="&nbsp;";
+            if (r === 11) { col6 = ""; col7 = "AM"; col8 = "PM"; col9 = "SR"; }
+            else if (r >= 12 && r <= 18) { col6 = days[r - 12]; }
+
+            cardHtml += `<tr class="${rowClass}">
+                <td style="text-align:center;">${col1Html}</td><td style="text-align:center;">${col2Html}</td>
+                <td>&nbsp;</td><td>&nbsp;</td><td style="text-align:left; padding-left:5px;">${obs}</td>
+                <td>${col6}</td><td>${col7}</td><td>${col8}</td><td>${col9}</td>
+            </tr>`;
+        }
+        cardHtml += `</tbody></table>
+        <div class="card-stats">Total : ${cardTotal} &nbsp;&nbsp;&nbsp; À faire : ${cardToDo} &nbsp;&nbsp;&nbsp; Bâtiments : ${cardUniqueDoors.size}</div>
+        </div>`; 
+        currentSheet.innerHTML += cardHtml;
+    });
+    setTimeout(() => { window.print(); }, 500);
+}
+
+    </script>
+</body>
+</html>
