@@ -2,15 +2,17 @@
 <html lang="fr">
 <head>
     <script>
+        // --- CONFIGURATION ---
         const CONST_LIEN_PARTIEL = "https://docs.google.com/spreadsheets/d/1yQGNgHcDDY_oUWv_UOXJ_h7jpk1AZ-oX4yi37TcW/edit?gid=2116284954";
         
-
         // Mettez "" (vide) pour réactiver la demande de mot de passe.
         const CONST_AUTO_PASS = "qEk"; 
 
         const CONST_GID_BASE = "0";          
-        const PUBLIC_SITE_URL = "https://lacordaire.netlify.app/";
-        const ADMIN_SITE_URL = "https://app.netlify.com/teams/aquapel-ca/projects";
+        
+        // --- NOUVEAUX LIENS GITHUB ---
+        const PUBLIC_SITE_URL = "https://My-JW.github.io/Mes-territoires/";
+        const ADMIN_SITE_URL = "https://github.com/My-JW/Mes-territoires"; 
     </script>
 
     <meta charset="UTF-8">
@@ -69,7 +71,10 @@
         .btn-primary { background: #0056b3; color: white; border-color: #004494; }
         .btn-primary:hover { background: #004494; }
         .btn-print { background: #343a40; color: white; border-color: #343a40; font-weight: bold; }
-        .btn-netlify { background: #e0f7fa; color: #006064; border-color: #0097a7; font-weight: bold; }
+        /* Style bouton GitHub */
+        .btn-github { background: #24292e; color: #ffffff; border-color: #24292e; font-weight: bold; }
+        .btn-github:hover { background: #000000; }
+        
         .btn-active { background-color: #0056B3; color: white; border-color: #6c757d; }
         .btn-help { width: 38px; height: 38px; border-radius: 50%; background: #E40D0D; color: white; border: none; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
@@ -78,7 +83,7 @@
 
         #status-panel { display: flex; flex-direction: column; justify-content: center; font-size: 12px; margin-left: 0; padding: 5px 10px; border-radius: 5px; border: 1px solid #ddd; background-color: #f8f9fa; min-width: 180px; }
         #server-identity { font-weight: bold; margin-bottom: 2px; text-transform: uppercase; }
-        .status-local { color: #d35400; } .status-online { color: #27ae60; } .status-netlify { color: #00838f; }
+        .status-local { color: #d35400; } .status-online { color: #27ae60; } .status-other { color: #00838f; }
         #loading-msg { color: #666; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
 
         .toolbar { padding: 10px 15px; background: #e9ecef; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #ccc; justify-content: space-between;}
@@ -115,7 +120,7 @@
         .modal-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 5px; text-transform: uppercase; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .btn-modal-choice { padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.1s, box-shadow 0.2s; text-decoration: none; }
         .btn-choice-site { background-color: #28a745; color: white; border: 1px solid #218838; }
-        .btn-choice-admin { background-color: #00838f; color: white; border: 1px solid #006064; }
+        .btn-choice-admin { background-color: #24292e; color: white; border: 1px solid #000; }
         .btn-modal-close { background: #f1f1f1; color: #333; border: 1px solid #ccc; margin-top: 10px; }
         
         .help-section { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
@@ -194,7 +199,7 @@
                 <span id="loading-msg">En attente.</span>
             </div>
             
-            <button class="btn btn-netlify" onclick="showNetlifyModal()">🌐 Liens / Serveur</button>
+            <button class="btn btn-github" onclick="showServerModal()">🌐 Liens / Serveur</button>
             <div style="flex:1"></div>
 
             <div class="rapid-filter-group">
@@ -277,16 +282,16 @@
         </div>
     </div>
 
-    <!-- MODALE NETLIFY (Popup Navigation) -->
-    <div id="netlify-modal" class="modal-overlay">
+    <!-- MODALE LIENS / SERVEUR (Popup Navigation) -->
+    <div id="server-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-title">Navigation & Liens</div>
-            <button class="btn-modal-choice btn-choice-site" onclick="openLink('SITE')">🏠 Accéder au site Lacordaire</button>
+            <button class="btn-modal-choice btn-choice-site" onclick="openLink('SITE')">🏠 Accéder au site GitHub (My-JW)</button>
             <hr style="width:100%; border:0; border-top:1px solid #eee; margin:5px 0;">
             <div style="font-size:13px; color:#555; text-align:left; margin-bottom:2px; font-weight:bold;">Zone Administration :</div>
-            <div class="modal-warning">⚠️ Pour login, demander au gestionnaire du site le Login et mot de passe.</div>
-            <button class="btn-modal-choice btn-choice-admin" onclick="openLink('ADMIN')">⚙️ Administration / Settings (Netlify)</button>
-            <button class="btn-modal-choice btn-modal-close" onclick="closeNetlifyModal()">Fermer la fenêtre</button>
+            <div class="modal-warning">⚠️ Pour voir ou modifier le code source du projet.</div>
+            <button class="btn-modal-choice btn-choice-admin" onclick="openLink('ADMIN')">⚙️ Voir le projet GitHub (Code)</button>
+            <button class="btn-modal-choice btn-modal-close" onclick="closeServerModal()">Fermer la fenêtre</button>
         </div>
     </div>
 
@@ -299,11 +304,9 @@
                 <div class="help-h3">⚡ État du Serveur</div>
                 <div class="help-text">
                     Le cadre "Serveur" indique votre mode de connexion :<br>
-                    - <b style="color:#d35400">LOCAL (Orange)</b> : Vous ouvrez le fichier depuis votre ordinateur en LOCAL.<br>
-                    Pour télécharger le programme en local : <b>ne chargez aucun territoire</b>, faites Clic-Droit > "Enregistrer sous..." sur la page.<br>
-                    <i style="font-size:12px; color:#777;"><b>Inconvéniant :</b> Vous passez par <b>https://corsproxy.io/</b> en local, ce qui veut dire que si leur site ferme, votre appli ne fonctionnera plus. Vous devrez passer alors par NETLIFY, qui est très fiable. Par contre en local, <b>vous n'aurez plus la dernière version</b> du programme (mises à jour manuelles requises).</i><br><br>
-                    - <b style="color:#00838f">NETLIFY (Sarcelle)</b> : Vous êtes sur le site de Lacordaire (netlify.app).<br><br>
-                    - <b style="color:#27ae60">MY-JW (Vert)</b> : Vous êtes sur le site hébergé (MY-JW.com).
+                    - <b style="color:#d35400">LOCAL (PC)</b> : Vous ouvrez le fichier depuis votre ordinateur.<br>
+                    - <b style="color:#27ae60">GITHUB (My-JW)</b> : Vous êtes sur le site en ligne (https://my-jw.github.io/Mes-territoires/).<br>
+                    - <b style="color:#00838f">AUTRE</b> : Serveur tiers (ex: Netlify).
                 </div>
             </div>
 
@@ -441,14 +444,14 @@
         }
 
         // --- GESTION DES MODALES ---
-        function showNetlifyModal() { document.getElementById("netlify-modal").style.display = "flex"; }
-        function closeNetlifyModal() { document.getElementById("netlify-modal").style.display = "none"; }
+        function showServerModal() { document.getElementById("server-modal").style.display = "flex"; }
+        function closeServerModal() { document.getElementById("server-modal").style.display = "none"; }
         
         function showHelpModal() { document.getElementById("help-modal").style.display = "flex"; }
         function closeHelpModal() { document.getElementById("help-modal").style.display = "none"; }
 
         function openLink(type) {
-            closeNetlifyModal();
+            closeServerModal();
             if (type === 'SITE') {
                 window.open(PUBLIC_SITE_URL, '_blank');
             } else if (type === 'ADMIN') {
@@ -456,17 +459,18 @@
             }
         }
 
+        // --- GESTION DE LA DETECTION DU SERVEUR (MODIFIÉE POUR GITHUB) ---
         window.onload = function() {
             const identityEl = document.getElementById("server-identity");
             const protocol = window.location.protocol;
             const hostname = window.location.hostname;
             
             if (protocol === 'file:') {
-                identityEl.innerHTML = "Vous êtes sur le serveur <span class='status-local'>LOCAL</span>";
-            } else if (hostname.includes('netlify.app')) {
-                identityEl.innerHTML = "Vous êtes sur le serveur <span class='status-netlify'>NETLIFY</span>";
+                identityEl.innerHTML = "Mode <span class='status-local'>LOCAL (PC)</span>";
+            } else if (hostname.includes('github.io')) {
+                identityEl.innerHTML = "Serveur <span class='status-online'>GitHub (My-JW)</span>";
             } else {
-                identityEl.innerHTML = "Vous êtes sur le serveur de <span class='status-online'>MY-JW</span>";
+                identityEl.innerHTML = "Serveur <span class='status-other'>Autre / Netlify</span>";
             }
 
             // GESTION DU LOGIN AUTOMATIQUE
@@ -744,7 +748,7 @@
 
         function formatPrintDate(d) { return d || ""; }
 
-       // --- FONCTION IMPRESSION RECTO-VERSO CORRIGÉE ---
+       // --- FONCTION IMPRESSION RECTO-VERSO ---
          function printTerritory() {
     let dataToPrint = getFilteredAndSortedData(); 
     if(!dataToPrint || dataToPrint.length === 0) return alert("Rien à imprimer !");
